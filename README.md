@@ -72,7 +72,13 @@ The graph will be read from a text file with the following format:
 - **Each of the following `m` lines**: three numbers `x`, `y`, and `c`, describing an edge: the origin vertex `x`, the target vertex `y`, and the cost `c` of the edge.
 
 **Example**:
-4 5 0 1 2 1 2 3 2 3 4 3 0 5 1 3 6
+```txt
+5 4
+0 1
+1 2
+2 3
+3 4
+```
 
 ---
 
