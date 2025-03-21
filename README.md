@@ -1,116 +1,90 @@
-🚀 Directed Graph Algorithms
+# 📚 Graph Algorithms - Practical Work No. 1
 
-📌 Project Overview
+Design and implement an abstract data type **directed graph** and various functions to read, modify, and manipulate the graph from a text file. The goal is to manage a **directed graph** with operations to retrieve edge information, vertex properties, and other required functionalities.
 
-This project is a practical implementation of a Directed Graph Abstract Data Type with various functionalities, including:
+---
 
-✅ Reading a directed graph from a text file 📄
-✅ Parsing vertices and edges 🔄
-✅ Checking edge existence and retrieving Edge_id 🔍
-✅ Calculating in-degree & out-degree of vertices 📊
-✅ Iterating outbound and inbound edges 🔄
-✅ Adding and removing vertices and edges ➕➖
-✅ Storing and modifying edge costs 💰
-✅ Copying graphs independently 📋
-✅ Generating random graphs 🎲
-✅ Saving a graph to a text file 💾
+## 📝 Objective
 
-📂 File Format
+You will design a **directed graph** with vertices represented as integers (0 to n-1) and edges that may either be a pair of vertex identifiers or a unique **Edge_id**. Additionally, you'll implement operations to:
 
-The graph is stored in a text file with the following format:
+1. Parse the graph's vertices and edges.
+2. Retrieve and modify edge properties.
+3. Add or remove vertices and edges.
+4. Read from and write to a text file representing the graph.
+5. Create random graphs with specified numbers of vertices and edges.
 
-<number_of_vertices> <number_of_edges>
-<source_vertex> <target_vertex> <cost>
-<source_vertex> <target_vertex> <cost>
-...
+---
 
-Example:
+## 🔧 Requirements
 
-5 7
-0 1 10
-0 2 15
-1 3 20
-2 3 25
-2 4 30
-3 4 35
-4 0 40
+### ⚙️ Core Operations
 
-🛠️ Setup & Usage
+1. **🔢 Number of Vertices**:  
+   Get the total number of vertices in the graph.
 
-1️⃣ Clone the Repository
+2. **🔄 Parse Vertices**:  
+   Iterate through the set of vertices in the graph.
 
-git clone https://github.com/your-username/graph-algorithms.git
-cd graph-algorithms
+3. **🔗 Edge Existence**:  
+   Given two vertices, check if there is an edge from the first to the second. If it exists, retrieve the **Edge_id**.
 
-2️⃣ Run the Program
+4. **📊 In-Degree & Out-Degree**:  
+   Retrieve the in-degree (number of incoming edges) and out-degree (number of outgoing edges) of a specified vertex.
 
-Ensure you have Python 3+ installed. Then, execute:
+5. **🔀 Iterate Outbound & Inbound Edges**:  
+   Retrieve the **Edge_id** for each outbound and inbound edge for a specific vertex.
 
-python main.py
+6. **📍 Edge Endpoints**:  
+   For a given **Edge_id**, retrieve the endpoints (source and target vertices).
 
-3️⃣ Generate a Random Graph
+7. **💾 Edge Information**:  
+   Retrieve or modify the integer value (cost) attached to a specified edge.
 
-Run:
+8. **🛠️ Graph Modifications**:  
+   - ➕ Add and remove vertices.
+   - ➖ Add and remove edges.
+   - 🔄 Ensure that edge properties and vertex identifiers are managed appropriately.
 
-python generate_graph.py <num_vertices> <num_edges>
+---
 
-Example:
+### 📏 Performance Requirements
 
-python generate_graph.py 1000 4000
+- Operations must take no more than:
+    - **O(deg(x) + deg(y))** for verifying the existence of an edge and for retrieving the edge between two given vertices.
+    - **O(1)** for operations such as:
+        - Getting the first or next edge inbound or outbound from a given vertex.
+        - Getting the endpoints or modifying the attached integer for an edge.
+        - Getting the total number of vertices or edges.
+        - Getting the in-degree or out-degree of a given vertex.
 
-4️⃣ Read Graph from File
+### ⚖️ Additional Constraints
 
-python read_graph.py graph.txt
+- The object returned by the parse functions shall **not** allow modifying the graph through its public functions. So, don't return sets by reference. Return iterators instead! 📜
 
-📜 Features & Complexity
+---
 
-Operation
+## 📂 File Format
 
-Complexity
+The graph will be read from a text file with the following format:
 
-Get number of vertices
+- **First line**: the number `n` of vertices and the number `m` of edges.
+- **Each of the following `m` lines**: three numbers `x`, `y`, and `c`, describing an edge: the origin vertex `x`, the target vertex `y`, and the cost `c` of the edge.
 
-O(1)
+**Example**:
+4 5 0 1 2 1 2 3 2 3 4 3 0 5 1 3 6
 
-Check if edge exists (Edge_id)
+---
 
-O(deg(x) + deg(y))
+## 🎲 Bonus Operations (Optional)
 
-Get in-degree / out-degree
+- **Multilingual Implementation**:  
+   Do the implementation in two distinct languages:
+   - Java (~2p)
+   - C# (~2p)
+   - C++ (~4p)
 
-O(1)
+___
 
-Parse vertices
 
-O(n)
-
-Parse outbound/inbound edges
-
-O(deg(x))
-
-Add / Remove edge
-
-O(1)
-
-Add / Remove vertex
-
-O(n)
-
-Get / Set edge cost
-
-O(1)
-
-Copy graph
-
-O(n + m)
-
-🔗 Contributing
-
-Feel free to fork this project and submit pull requests! Contributions are always welcome. 😊
-
-📜 License
-
-This project is open-source under the MIT License. 📄
-
-Happy Coding! 💻✨
 
