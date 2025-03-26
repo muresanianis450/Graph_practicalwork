@@ -1,5 +1,5 @@
 import random
-
+import copy
 
 class Graph:
     def __init__(self, v="graph.txt"):
@@ -124,6 +124,17 @@ class Graph:
             if x != y and self.is_edge(x, y) is None:
                 self.add_edge(x, y, weight)
 
+    def deepcopy(self):
+        """
+        Creates a deep copy of the graph.
+        :return: A new Graph object that is a deep copy of the current graph.
+        """
+        new_graph = Graph()
+        new_graph.out_neighbours = copy.deepcopy(self.out_neighbours)
+        new_graph.edges = copy.deepcopy(self.edges)
+        new_graph.edge_count = self.edge_count
+        return new_graph
+
 
 def write_to_file(graph: Graph, file_name):
     """
@@ -137,7 +148,6 @@ def write_to_file(graph: Graph, file_name):
             source, target, weight = graph.get_edge_by_id(edge_id)
             f.write(f"{source} {target} {weight}\n")
 
-
 class GraphUI:
 
     def __init__(self, graph=None):
@@ -149,6 +159,7 @@ class GraphUI:
             self.graph = Graph("graph.txt")  # Default to reading from "graph.txt"
         else:
             self.graph = graph
+        self.deep_copied_graph = None  # To store the deep copy of the graph
 
     def load_graph_from_file_ui(self):
         """Prompts user to load a graph from a file."""
@@ -161,6 +172,24 @@ class GraphUI:
         file_name = input("Enter file name to save the graph: ")
         write_to_file(self.graph, file_name)
         print(f"Graph saved to {file_name}")
+
+    def print_deep_copy(self):
+        """Prints the deep copy of the graph."""
+        if self.deep_copied_graph:
+            print("\nDeep Copy of Graph:")
+            print("Vertices:", list(self.deep_copied_graph.parse_vertices()))
+            for edge_id, (source, target, weight) in self.deep_copied_graph.edges.items():
+                print(f"Edge {edge_id}: {source} -> {target} (Weight: {weight})")
+        else:
+            print("No deep copy available to print.")
+
+    def save_deep_copy_to_file_ui(self):
+        """Saves the deep copy of the graph to a file."""
+        if self.deep_copied_graph:
+            write_to_file(self.deep_copied_graph, "deepcopy.txt")
+            print("Deep copy of the graph saved to deepcopy.txt")
+        else:
+            print("No deep copy available to save.")
 
     def display_menu(self):
         """Displays the console menu for user interaction."""
@@ -179,7 +208,10 @@ class GraphUI:
         print("12. Save Graph to File")
         print("13. Load Graph from File")
         print("14. Generate Random Graph")
-        print("15. Exit")
+        print("15. Deep Copy Graph")
+        print("16. Save Deep Copy to File")
+        print("17. Print Deep Copy")
+        print("18. Exit")
 
     def handle_menu_option(self, option):
         """Handles user input and executes the corresponding graph operation."""
@@ -212,6 +244,12 @@ class GraphUI:
         elif option == 14:
             self.generate_random_graph_ui()
         elif option == 15:
+            self.deep_copy_graph_ui()
+        elif option == 16:
+            self.save_deep_copy_to_file_ui()
+        elif option == 17:
+            self.print_deep_copy()
+        elif option == 18:
             print("Exiting...")
             return False
         else:
@@ -304,6 +342,11 @@ class GraphUI:
         number_edges = int(input("Enter number of edges: "))
         self.graph.generate_random_graph(number_vertices, number_edges)
         print(f"Random graph generated with {number_vertices} vertices and {number_edges} edges.")
+
+    def deep_copy_graph_ui(self):
+        """Creates a deep copy of the graph."""
+        self.deep_copied_graph = self.graph.deepcopy()
+        print("Deep copy of the graph created. You can now modify them independently.")
 
     def run(self):
         """Runs the menu-driven UI in a loop."""
