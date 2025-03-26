@@ -1,49 +1,44 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
+#include <iostream>
 #include <vector>
 #include <unordered_map>
-#include <tuple>
-#include <string>
-
-using namespace std;
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
 
 class Graph {
 private:
-    unordered_map<int, vector<pair<int, int>>> out_neighbours; // Adjacency list (with weights)
-    unordered_map<int, tuple<int, int, int>> edges;  // Edge ID -> (source, target, weight)
+    std::unordered_map<int, std::vector<std::pair<int, int>>> out_neighbours;
+    std::unordered_map<int, std::tuple<int, int, int>> edges;
     int edge_count;
 
+    void readFromFile(const std::string& filename);
+
 public:
-    Graph(const string& filename = "");
+    Graph(const std::string& filename);
+    Graph(int vertices);
 
-    void _read_from_file(const string& file_name);
+    bool addEdge(int x, int y, int weight);
+    bool removeEdge(int x, int y);
+    bool removeVertex(int x);
+    void addVertex(int x);
 
-    bool add_edge(int x, int y, int weight);
+    std::tuple<int, int, int> getEdgeById(int edgeId) const;
+    std::vector<std::pair<int, int>> parseOut(int x) const;
 
-    bool remove_edge(int x, int y);
+    int getNumberVertices() const;
+    std::vector<int> parseVertices() const;
 
-    bool remove_vertex(int x);
+    static Graph readFromFileStatic(const std::string& filename);
 
-    bool add_vertex(int x);
+    int isEdge(int x, int y) const;
+    void generateRandomGraph(int numberVertices, int numberEdges);
+    Graph deepcopy() const;
 
-    tuple<int, int, int> get_edge_by_id(int edge_id);
-
-    vector<pair<int, int>> parse_out(int x);
-
-    int get_number_vertices();
-
-    vector<int> parse_vertices();
-
-    static Graph read_from_file(const string& file_name);
-
-    bool is_edge(int x, int y);
-
-    void generate_random_graph(int number_vertices, int number_edges);
-
-    int get_edge_count() const;
-
-    friend void write_to_file(Graph& graph, const string& file_name);
+    void displayGraph() const;
+    void writeToFile(const std::string& filename) const;
 };
 
 #endif // GRAPH_H

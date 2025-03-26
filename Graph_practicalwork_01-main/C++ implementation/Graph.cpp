@@ -25,6 +25,14 @@ public:
         _read_from_file(filename);
     }
 
+    Graph deepcopy() const {
+        Graph copy;
+        copy.edge_count = this->edge_count;
+        copy.out_neighbours = this->out_neighbours;
+        copy.edges = this->edges;
+        return copy;
+    }
+
     void _read_from_file(const string& file_name) {
         ifstream file(file_name);
         if (!file.is_open()) {
@@ -158,10 +166,28 @@ void write_to_file(Graph& graph, const string& file_name) {
 class GraphUI {
 private:
     Graph graph;
-
+    Graph copied_graph;
 public:
     GraphUI(const string& filename = "graph.txt") : graph(filename) {}
 
+    void copy_graph_ui() {
+        copied_graph = graph.deepcopy();
+        cout << "Graph copied successfully." << endl;
+    }
+    void show_copied_graph() {
+        cout << "\nCopied Graph:" << endl;
+        cout << "Vertices: ";
+        vector<int> vertices = copied_graph.parse_vertices();
+        for (int vertex : vertices) {
+            cout << vertex << " ";
+        }
+        cout << endl;
+        for (int edge_id = 0; edge_id < copied_graph.get_edge_count(); ++edge_id) {
+            int source, target, weight;
+            tie(source, target, weight) = copied_graph.get_edge_by_id(edge_id);
+            cout << "Edge " << edge_id << ": " << source << " -> " << target << " (Weight: " << weight << ")" << endl;
+        }
+    }
     void load_graph_from_file_ui() {
         string file_name;
         cout << "Enter file name to load the graph: ";
@@ -207,6 +233,8 @@ public:
         cout << "10. Load Graph from File" << endl;
         cout << "11. Generate Random Graph" << endl;
         cout << "12. Exit" << endl;
+        cout << "13. Copy Graph" << endl;
+        cout << "14. Show Copied Graph" << endl;
     }
 
     void handle_menu_option(int option) {
@@ -247,6 +275,11 @@ public:
             case 12:
                 cout << "Exiting..." << endl;
                 exit(0);
+            case 13:
+                copy_graph_ui();
+            case 14:
+                show_copied_graph();
+                break;
             default:
                 cout << "Invalid option. Please try again." << endl;
         }
