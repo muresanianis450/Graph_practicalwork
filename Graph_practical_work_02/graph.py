@@ -25,6 +25,7 @@ class Graph:
         Returns the out neighbours of a vertex
         :param vertex: the parent
         :return: the out neighbours
+
         """
         return self.out_neighbours[vertex]
     def _read_from_file(self, file_name):
