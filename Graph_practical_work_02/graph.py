@@ -1,6 +1,7 @@
 import random
 import copy
 
+
 class Graph:
     def __init__(self, v="graph.txt"):
         """
@@ -45,24 +46,19 @@ class Graph:
                 self.add_edge(u, v, w)
 
     def add_edge(self, x, y, weight):
-        """Adds an edge from x to y and y to x with a given weight."""
-        if y not in self.out_neighbours[x]:
+        """Adds a directed edge from x to y with a given weight."""
+        if y not in [neighbor for neighbor, _ in self.out_neighbours[x]]:
             self.out_neighbours[x].append((y, weight))
             self.edges[self.edge_count] = (x, y, weight)
-            self.edge_count += 1
-        if x not in self.out_neighbours[y]:
-            self.out_neighbours[y].append((x, weight))
-            self.edges[self.edge_count] = (y, x, weight)
             self.edge_count += 1
         return True
 
     def remove_edge(self, x, y):
-        """Removes the edge from x to y."""
+        """Removes the directed edge from x to y."""
         for i, (neighbor, weight) in enumerate(self.out_neighbours[x]):
             if neighbor == y:
                 del self.out_neighbours[x][i]
                 return True
-        return False
 
     def remove_vertex(self, x):
         """Removes vertex x from the graph."""

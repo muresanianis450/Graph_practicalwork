@@ -160,12 +160,16 @@ def wolf_goat_cabbage():
 
     return None
 
-# Exemple usage of finding connected components by simulating a non-directed graph
+# Example usage of finding connected components by simulating a non-directed graph
 graph = Graph(7)
-graph.add_edge(0,1,1)
-graph.add_edge(1,2,1)
-graph.add_edge(3,4,1)
-graph.add_edge(4,5,1)
+graph.add_edge(0, 1, 1)
+graph.add_edge(1, 0, 1)  # Add reverse edge
+graph.add_edge(1, 2, 1)
+graph.add_edge(2, 1, 1)  # Add reverse edge
+graph.add_edge(3, 4, 1)
+graph.add_edge(4, 3, 1)  # Add reverse edge
+graph.add_edge(4, 5, 1)
+graph.add_edge(5, 4, 1)  # Add reverse edge
 components = find_conected_components(graph)
 print("Connected components:", components)
 
@@ -175,8 +179,8 @@ print("Connected components:", components)
 g = Graph(7)
 g.add_edge(0, 1, 1)
 g.add_edge(1, 2, 1)
-g.add_edge(2, 0, 1)
-g.add_edge(1, 3, 1)
+#g.add_edge(2, 0, 1)
+#g.add_edge(1, 3, 1)
 g.add_edge(3, 4, 1)
 g.add_edge(4, 5, 1)
 g.add_edge(5, 3, 1)
@@ -188,17 +192,19 @@ print("Strongly connected components:", sccs)
 # Example usage of Tarjan's algorithm(finding biconnected components)
 g = Graph(7)
 g.add_edge(0, 1, 1)
-g.add_edge(1, 0, 1)
+#g.add_edge(1, 0, 1)
 g.add_edge(1, 2, 1)
-g.add_edge(2, 1, 1)
+#g.add_edge(2, 1, 1)
 g.add_edge(1, 3, 1)
-g.add_edge(3, 1, 1)
+#g.add_edge(3, 1, 1)
 g.add_edge(3, 4, 1)
 g.add_edge(4, 3, 1)
 g.add_edge(4, 5, 1)
 g.add_edge(5, 4, 1)
 g.add_edge(5, 6, 1)
 g.add_edge(6, 5, 1)
+g.add_edge(3,6,1)
+g.add_edge(6, 3, 1)
 
 bccs = tarjan_bcc(g)
 print("Biconnected components:", bccs)
@@ -206,108 +212,119 @@ print("Biconnected components:", bccs)
 solution = wolf_goat_cabbage()
 print("Wolf, Goat, and Cabbage Solution:", solution)
 
+
 import heapq
+from copy import deepcopy
 
+class Fifteen:
+    def __init__(self, tiles=None, parent=None, move=None):
+        self.goal_positions = self._compute_goal_positions()
+        self.previous_moves = parent.previous_moves + [move] if parent else []
+        self.depth = parent.depth + 1 if parent else 0
+        self.tiles = [row[:] for row in tiles] if tiles else self.default_board()  # Avoid deepcopy
+        self.zero_x, self.zero_y = self.find(0)
+        self.h_score = self.manhattan()
+        self.undo_move = {'u': 'd', 'd': 'u', 'l': 'r', 'r': 'l'}.get(move, None)
 
-class PuzzleState:
-    def __init__(self, board, empty_pos, moves=0, previous=None):
-        self.board = board
-        self.empty_pos = empty_pos
-        self.moves = moves
-        self.previous = previous
-        self.h_cost = self.manhattan_distance()  # Precompute heuristic
-        self.f_cost = self.moves + self.h_cost  # A* function: f(n) = g(n) + h(n)
+    def default_board(self):
+        return [[1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+        [0, 13, 14, 15]
+        ]
 
-    def __lt__(self, other):
-        return self.f_cost < other.f_cost  # Use precomputed f-cost
-
-    def manhattan_distance(self):
-        """Compute the Manhattan distance heuristic."""
-        distance = 0
+    def _compute_goal_positions(self):
+        goal = {}
         for i in range(4):
             for j in range(4):
-                value = self.board[i][j]
-                if value != 0:  # Ignore empty tile
-                    target_x = (value - 1) // 4
-                    target_y = (value - 1) % 4
-                    distance += abs(i - target_x) + abs(j - target_y)
-        return distance
+                val = i * 4 + j + 1
+                goal[val % 16] = (j, i)
+        return goal
 
-    def is_goal(self):
-        """Check if the puzzle is solved."""
-        return self.board == [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]]
+    def find(self, tile):
+        for y in range(4):
+            for x in range(4):
+                if self.tiles[y][x] == tile:
+                    return x, y
 
-    def get_neighbors(self):
-        """Generate valid neighboring states."""
-        neighbors = []
-        x, y = self.empty_pos
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
-        for dx, dy in directions:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < 4 and 0 <= ny < 4:
-                new_board = [row[:] for row in self.board]  # Deep copy
-                new_board[x][y], new_board[nx][ny] = new_board[nx][ny], new_board[x][y]
-                neighbors.append(PuzzleState(new_board, (nx, ny), self.moves + 1, self))
-        return neighbors
+    def move_tile(self, direction):
+        x, y = self.zero_x, self.zero_y
+        dxdy = {'u': (0, -1), 'd': (0, 1), 'l': (-1, 0), 'r': (1, 0)}
+        dx, dy = dxdy[direction]
+        new_x, new_y = x + dx, y + dy
+
+        if not (0 <= new_x < 4 and 0 <= new_y < 4):
+            return None
+
+        new_tiles = [row[:] for row in self.tiles]  # Avoid deepcopy
+        new_tiles[y][x], new_tiles[new_y][new_x] = new_tiles[new_y][new_x], new_tiles[y][x]
+        return Fifteen(new_tiles, self, direction)
+
+    def generate_next_states(self):
+        directions = ['u', 'd', 'l', 'r']
+        next_states = []
+        for dir in directions:
+            if dir != self.undo_move:  # Avoid reversing the last move
+                new_state = self.move_tile(dir)
+                if new_state:
+                    next_states.append(new_state)
+        return next_states
+
+    def manhattan(self):
+        return sum(
+            abs(x - self.goal_positions[val][0]) + abs(y - self.goal_positions[val][1])
+            for y in range(4) for x in range(4)
+            if (val := self.tiles[y][x]) != 0
+        )
+
+    def __lt__(self, other):
+        return (self.depth + self.h_score) < (other.depth + other.h_score)
+
+    def __hash__(self):
+        return hash(tuple(tuple(row) for row in self.tiles))
+
+    def __eq__(self, other):
+        return self.tiles == other.tiles
+
+    def astar(self):
+        queue = [(self.h_score, self)]
+        visited = set()
+
+        while queue:
+            _, current = heapq.heappop(queue)
+            state_hash = hash(current)
+            if state_hash in visited:
+                continue
+            visited.add(state_hash)
+
+            if current.h_score == 0:
+                print("Solution found!")
+                current.show_steps()
+                print(f"Total moves: {len(current.previous_moves)}")
+                return
+
+            for neighbor in current.generate_next_states():
+                if hash(neighbor) not in visited:
+                    heapq.heappush(queue, (neighbor.depth + neighbor.h_score, neighbor))
+
+        print("No solution found.")
+
+    def show_steps(self):
+        state = deepcopy(self)
+        print("Initial State:")
+        state.PrintState()
+        for move in self.previous_moves:
+            print(f"Move: {move}")
+            next_state = state.move_tile(move)
+            if next_state:  # Ensure the move is valid
+                state = next_state
+                state.PrintState()
+
+    def PrintState(self):
+        for row in self.tiles:
+            print(" ".join(f"{n:2}" for n in row))
+        print()
 
 
-def is_solvable(board):
-    """Check if a given 15-puzzle configuration is solvable."""
-    flat_board = [num for row in board for num in row if num != 0]
-    inversions = sum(
-        1 for i in range(len(flat_board)) for j in range(i + 1, len(flat_board)) if flat_board[i] > flat_board[j])
-
-    # Find the row index of the empty tile, counting from the **bottom** (1-based index)
-    empty_row = 4 - next(i for i, row in enumerate(board) if 0 in row)
-
-    return (inversions + empty_row) % 2 == 0  # Correct condition for solvability
-
-
-def solve_15_puzzle(initial_board):
-    """Solve the 15-puzzle using an optimized A* search."""
-    if not is_solvable(initial_board):
-        return None  # If unsolvable, return None
-
-    empty_pos = next((i, j) for i in range(4) for j in range(4) if initial_board[i][j] == 0)
-    initial_state = PuzzleState(initial_board, empty_pos)
-
-    priority_queue = []
-    heapq.heappush(priority_queue, initial_state)
-
-    visited = set()
-    visited.add(tuple(map(tuple, initial_state.board)))  # Store only board state
-
-    while priority_queue:
-        current_state = heapq.heappop(priority_queue)
-
-        if current_state.is_goal():
-            path = []
-            while current_state:
-                path.append(current_state.board)
-                current_state = current_state.previous
-            return path[::-1]  # Return solution path
-
-        for neighbor in current_state.get_neighbors():
-            neighbor_tuple = tuple(map(tuple, neighbor.board))
-            if neighbor_tuple not in visited:
-                visited.add(neighbor_tuple)
-                heapq.heappush(priority_queue, neighbor)
-
-    return None  # If no solution found (should never happen)
-
-
-# Example usage
-initial_board = [
-    [1, 2, 3, 4],
-    [5, 6, 7, 8],
-    [9, 10, 11, 12],
-    [13, 15, 14, 0]
-]
-
-solution = solve_15_puzzle(initial_board)
-for step in solution:
-    for row in step:
-        print(row)
-    print()
-
-
+fifteen = Fifteen()
+fifteen.astar()
