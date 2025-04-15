@@ -2,6 +2,8 @@ import random
 import copy
 import heapq
 
+from fontTools.ttLib.ttVisitor import visit
+
 
 class Graph:
     def __init__(self, v="graph.txt"):
@@ -369,6 +371,93 @@ def run_bonus_2():
           dag.count_walks(start_vertex, end_vertex))
 
 #run_bonus_2()
+
+
+
+
+#______________BONUS 3__________________
+
+import heapq
+
+def bridge_and_torch(times):
+    n = len(times)
+    people = list(range(n))
+    all_people = frozenset(people)
+    start_state = (all_people, 'L')
+    goal_state = (frozenset(), 'R')
+
+    def is_goal(state):
+        return state == goal_state
+
+    def heuristic(state):
+        # Estimate: max of remaining on the left
+        if state[1] == 'L':
+            return max([times[p] for p in state[0]]) if state[0] else 0
+        else:
+            return 0  # All are on the right side or torch is not useful on the right
+
+    def neighbors(state):
+        left, torch_side = state
+        if torch_side == 'L':
+            # Move 1 or 2 people from left to right
+            for p1 in left:
+                for p2 in left:
+                    if p2 < p1:
+                        continue  # Avoid duplicates
+                    group = frozenset([p1, p2]) if p1 != p2 else frozenset([p1])
+                    new_left = left - group
+                    cost = max(times[p1], times[p2]) if p1 != p2 else times[p1]
+                    yield ((new_left, 'R'), cost, (p1, p2) if p1 != p2 else (p1,))
+        else:
+            # Move 1 person back from right to left
+            right = all_people - left
+            for p in right:
+                new_left = left | frozenset([p])
+                cost = times[p]
+                yield ((new_left, 'L'), cost, (p,))
+
+    def a_star(start):
+        queue = [(heuristic(start), 0, start, [])]
+        visited = {}
+
+        while queue:
+            est_total_cost, cost_so_far, current_state, path = heapq.heappop(queue)
+
+            if is_goal(current_state):
+                return cost_so_far, path
+
+            if current_state in visited and visited[current_state] <= cost_so_far:
+                continue
+            visited[current_state] = cost_so_far
+
+            for next_state, transition_cost, moved_people in neighbors(current_state):
+                new_cost = cost_so_far + transition_cost
+                new_path = path + [(current_state, moved_people, transition_cost)]
+                est = new_cost + heuristic(next_state)
+                heapq.heappush(queue, (est, new_cost, next_state, new_path))
+        return None
+
+    result = a_star(start_state)
+    if result is None:
+        print("No solution found.")
+        return
+
+    total_time, solution_path = result
+
+    # Display results
+    print(f"Minimum total time: {total_time}")
+    for idx, (state, moved, cost) in enumerate(solution_path):
+        left_side = sorted(list(state[0]))
+        torch = state[1]
+        move_direction = "->" if torch == 'L' else "<-"
+        names = " & ".join(f"Person {i} ({times[i]} min)" for i in moved)
+        print(f"Step {idx+1}: {names} {move_direction}  ({cost} min)")
+
+    return total_time
+
+# Example usage:
+times = [1, 2, 5, 10]
+bridge_and_torch(times)
 
 
 
