@@ -156,31 +156,48 @@ class Graph:
         :param end_vertex: The target vertex.
         :return: The number of distinct walks of minimum cost.
         """
-        distances = {vertex: float('inf') for vertex in self.out_neighbours}
-        distances[start_vertex] = 0
-        path_count = {vertex: 0 for vertex in self.out_neighbours}
-        path_count[start_vertex] = 1
+        distances = {vertex: float('inf') for vertex in self.out_neighbours} # Initialise distance to all vertices to infinity
+        distances[start_vertex] = 0 # Set distance to start vertex to 0
+
+        #Path count keeps track of how many distinct paths(walks) lead to each vertex
+        path_count = {vertex: 0 for vertex in self.out_neighbours} # Initialise path count to all vertices to 0
+        path_count[start_vertex] = 1 # Set path count to start vertex to 1 (itself)
+
+        #paths is a dictionary that stores all distinct walks of minimum cost to each vertex
         paths = {vertex: [] for vertex in self.out_neighbours}
-        paths[start_vertex] = [[start_vertex]]
+        paths[start_vertex] = [[start_vertex]] #The only path to the start_vertex is itself
+
+        # Priority queue for Dijkstra's algorithm
+        # implemented as a heap to precess vertices in the order of increasing distance
         visited = set()
-        priority_queue = [(0, start_vertex)]  # (distance, vertex)
+        priority_queue = [(0, start_vertex)]  # (distance, vertex) #Starts with start_vertex having a distance of 0
+
 
         while priority_queue:
             current_distance, current_vertex = heapq.heappop(priority_queue)
 
-            if current_vertex in visited:
+            if current_vertex in visited: # Skip if already visited
                 continue
-            visited.add(current_vertex)
+            visited.add(current_vertex) # Add current vertex to visited set
+
+            # Update neighboring vertices, for each neighbor of current_vertex we calculate
+            # the new_distace to reach that neighbor by adding the edge weight to current_distance
 
             for neighbor, weight in self.out_neighbours[current_vertex]:
                 new_distance = current_distance + weight
 
+                # If the new distance is less than the current known distance, update it
                 if new_distance < distances[neighbor]:
                     distances[neighbor] = new_distance
                     path_count[neighbor] = path_count[current_vertex]
+                    #We update path_count for the neighbor to inherit the path count of the current_vertex
+                    #Because it is the minimum cost path to reach the neighbor
                     paths[neighbor] = [path + [neighbor] for path in paths[current_vertex]]
                     heapq.heappush(priority_queue, (new_distance, neighbor))
+
+                #We add the new paths from current_vertex to neighbor to the paths dictionary and increment the path_count
                 elif new_distance == distances[neighbor]:
+
                     path_count[neighbor] += path_count[current_vertex]
                     paths[neighbor].extend(path + [neighbor] for path in paths[current_vertex])
 
@@ -197,22 +214,31 @@ class Graph:
         :param start_vertex: The starting vertex.
         :return: distances, parents
         """
+        # Initialize distances and parents
         distances = {vertex: float('inf') for vertex in self.out_neighbours}
         distances[start_vertex] = 0
         parents = {vertex: None for vertex in self.out_neighbours}
         visited = set()
+        #Priority queue setup
+        # processing the vertices in order of increasing distance, starting with the strat_vertex having distance 0
         priority_queue = [(0, start_vertex)]  # (distance, vertex)
 
+
+        #Processing the queue
         while priority_queue:
             current_distance, current_vertex = heapq.heappop(priority_queue)
 
-            if current_vertex in visited:
+            if current_vertex in visited: # Skip if already visited
                 continue
-            visited.add(current_vertex)
+            visited.add(current_vertex)  # add current vertex to visited set
 
+
+            # Update neighboring vertices
             for neighbor, weight in self.out_neighbours[current_vertex]:
                 if neighbor not in visited:
                     new_distance = current_distance + weight
+                    #Relaxation:
+                    # If the new distance is less than the current known distance, update it
                     if new_distance < distances[neighbor]:
                         distances[neighbor] = new_distance
                         parents[neighbor] = current_vertex
@@ -269,6 +295,8 @@ def run_problem_large_graph():
     distances, parents = graph.dijkstra(start_vertex)
     results(distances, parents, start_vertex)
 
+#_________________BONUS 1____________________
+
 
 #TODO show notion photo with the graph represented
 def run_bonus_1():
@@ -282,11 +310,65 @@ def run_bonus_1():
 
 #run_problem_large_graph()
 #run_problem1_simple_graph()
-run_bonus_1()
+#run_bonus_1()
 
 
 
 
+
+#______________BONUS 2____________________
+from collections import defaultdict, deque
+class DAG:
+    def __init__(self, num_vertices):
+        self.num_vertices = num_vertices
+        self.graph = defaultdict(list) #Adjacency list representation of the graph
+        self.in_degree = [0] * num_vertices # #In-degree of each vertex
+
+    def add_edge(self, u, v):
+        self.graph[u].append(v)  # u -> v is a directed edge
+        self.in_degree[v] += 1   # increase in-degree of v
+
+    def count_walks(self, start, end):
+        # Step 1: Topological Sort (Kahn's Algorithm)
+        topo_order = [] # Will store vertices in topological order
+        # Initialize queue with vertices having in-degree of 0
+        queue = deque([v for v in range(self.num_vertices) if self.in_degree[v] == 0])
+
+        while queue:
+            u = queue.popleft()
+            topo_order.append(u) #Add the vertex to the topological order
+            for v in self.graph[u]:
+                self.in_degree[v] -= 1 #For each neighbour, decrease in-degree
+                if self.in_degree[v] == 0: # If in-degree becomes 0, add to queue
+                    queue.append(v)
+
+        # Step 2: Dynamic Programming
+        ways = [0] * self.num_vertices # ways[i] = number of ways to reach vertex i
+        ways[start] = 1                # There's one way to reach the start vertex
+
+        for u in topo_order:
+            for v in self.graph[u]:
+                ways[v] += ways[u]
+
+        return ways[end]
+
+#TODO show picture with the graph represented
+def run_bonus_2():
+    dag = DAG(6)
+    dag.add_edge(0, 1)
+    dag.add_edge(0, 2)
+    dag.add_edge(1, 3)
+    dag.add_edge(2, 3)
+    dag.add_edge(3, 4)
+    dag.add_edge(3, 5)
+
+    start_vertex = 0
+    end_vertex = 5
+
+    print(f"Number of distinct walks from {start_vertex} to {end_vertex}:",
+          dag.count_walks(start_vertex, end_vertex))
+
+#run_bonus_2()
 
 
 
