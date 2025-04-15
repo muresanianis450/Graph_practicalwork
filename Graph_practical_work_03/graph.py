@@ -148,6 +148,48 @@ class Graph:
         new_graph.edge_count = self.edge_count
         return new_graph
 
+    def count_min_cost_walks(self, start_vertex, end_vertex):
+        """
+        Counts the number of distinct walks of minimum cost between start_vertex and end_vertex
+        and prints all such walks.
+        :param start_vertex: The starting vertex.
+        :param end_vertex: The target vertex.
+        :return: The number of distinct walks of minimum cost.
+        """
+        distances = {vertex: float('inf') for vertex in self.out_neighbours}
+        distances[start_vertex] = 0
+        path_count = {vertex: 0 for vertex in self.out_neighbours}
+        path_count[start_vertex] = 1
+        paths = {vertex: [] for vertex in self.out_neighbours}
+        paths[start_vertex] = [[start_vertex]]
+        visited = set()
+        priority_queue = [(0, start_vertex)]  # (distance, vertex)
+
+        while priority_queue:
+            current_distance, current_vertex = heapq.heappop(priority_queue)
+
+            if current_vertex in visited:
+                continue
+            visited.add(current_vertex)
+
+            for neighbor, weight in self.out_neighbours[current_vertex]:
+                new_distance = current_distance + weight
+
+                if new_distance < distances[neighbor]:
+                    distances[neighbor] = new_distance
+                    path_count[neighbor] = path_count[current_vertex]
+                    paths[neighbor] = [path + [neighbor] for path in paths[current_vertex]]
+                    heapq.heappush(priority_queue, (new_distance, neighbor))
+                elif new_distance == distances[neighbor]:
+                    path_count[neighbor] += path_count[current_vertex]
+                    paths[neighbor].extend(path + [neighbor] for path in paths[current_vertex])
+
+        # Print all walks of minimum cost
+        print(f"All distinct walks of minimum cost from {start_vertex} to {end_vertex}:")
+        for walk in paths[end_vertex]:
+            print(" -> ".join(map(str, walk)))
+
+        return path_count[end_vertex]
 
     def dijkstra(self, start_vertex):
         """
@@ -228,9 +270,20 @@ def run_problem_large_graph():
     results(distances, parents, start_vertex)
 
 
+#TODO show notion photo with the graph represented
+def run_bonus_1():
+    graph = Graph("graph50.txt")
+    start_vertex = 0
+    end_vertex = 4
+    result = graph.count_min_cost_walks(start_vertex, end_vertex)
+    print(f"Number of distinct walks of minimum cost from {start_vertex} to {end_vertex}: {result}")
 
-run_problem_large_graph()
-run_problem1_simple_graph()
+
+
+#run_problem_large_graph()
+#run_problem1_simple_graph()
+run_bonus_1()
+
 
 
 
