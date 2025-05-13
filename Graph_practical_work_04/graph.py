@@ -181,6 +181,109 @@ def longest_path(graph: Graph, start: int, finish: int):
     return path, distances[finish]
 
 
+#_____________________BONUS 1_____________________
+def reconstruct_tree(list1 : list , list2: list, list3: list):
+    """
+    Reconstructs a tree from three lists.
+    :param list1: list parced in pre-order
+    :param list2: list parced in post-order
+    :param list3: list parced in in-order
+    :return: a tree
+    """
+    if len(list1) == 0 or len(list2) == 0 or len(list3) == 0:
+        return None
+
+    root = list1[0] # The first element of the pre-order list is the root
+    root_index = list3.index(root) #Find the index of the root in the in-order list
+
+    left_subtree = reconstruct_tree(list1[1:root_index + 1], list2[:root_index], list3[:root_index]) #Reconstruct the left subtree
+    right_subtree = reconstruct_tree(list1[root_index + 1:], list2[root_index:-1], list3[root_index + 1:]) #Reconstruct the right subtree
+
+    return root, left_subtree, right_subtree
+def print_tree(node, level=0, is_left=None):
+    """
+    Prints the tree in a structured format.
+    :param node: The current node (root, left, right).
+    :param level: The current depth level of the tree.
+    :param is_left: Whether the node is a left child.
+    """
+    if node is None:
+        return
+
+    root, left, right = node
+
+    # Print the current node with indentation
+    indent = " " * (4 * level)
+    if level == 0:
+        print(f"{indent}{root}")
+    elif is_left:
+        print(f"{indent}/ {root}")
+    else:
+        print(f"{indent}\\ {root}")
+
+    # Recursively print the left and right subtrees
+    print_tree(left, level + 1, is_left=True)
+    print_tree(right, level + 1, is_left=False)
+
+
+
+
+#_________________________BONUS 2_____________________
+
+def bonus_2(graph : Graph):
+    """
+    Verify if it is a DAG.
+    If it is:
+    Perform a topological sort.
+    Count the number of distinct paths from a start node to an end node in O(m + n) time.
+    :param graph: Graph Object
+    :return: A dictionary with the number of paths to each vertex
+    """
+
+    if not is_dag(graph):
+        raise ValueError("The graph is not a DAG")
+
+    topological_order = topological_sort(graph)
+    paths_count = {vertex: 0 for vertex in graph.parse_vertices()}
+    paths_count[topological_order[0]] = 1  # Start node has one path to itself
+    for vertex in topological_order:
+        for neighbor, _ in graph.get_out_neighbours_for_vertex(vertex):
+            paths_count[neighbor] += paths_count[vertex]
+    return paths_count
+
+
+#_________________________BONUS 3_____________________
+
+def bonus_3(graph : Graph):
+    """
+    Given a weighted graph:
+    Verify if it is a DAG.
+    If it is:
+    Perform a topological sort.
+    Find the number of distinct lowest-cost paths from a source node to a destination node in O(m + n) time.
+    :param graph: graph object
+    :return: dictionary with the number of paths to each vertex
+    """
+    if not is_dag(graph):
+        raise ValueError("The graph is not a DAG")
+
+    topological_order = topological_sort(graph)
+    paths_count = {vertex: 0 for vertex in graph.parse_vertices()}
+    paths_count[topological_order[0]] = 1  # Start node has one path to itself
+    min_cost = {vertex: float('inf') for vertex in graph.parse_vertices()}
+    min_cost[topological_order[0]] = 0
+
+    # Iterate through the topological order
+    for vertex in topological_order:
+        for neighbor, weight in graph.get_out_neighbours_for_vertex(vertex):
+            if min_cost[vertex] + weight < min_cost[neighbor]: # Update the minimum cost
+                min_cost[neighbor] = min_cost[vertex] + weight
+                paths_count[neighbor] = paths_count[vertex] # Reset the path
+            elif min_cost[vertex] + weight == min_cost[neighbor]: # If the cost is equal, add the number of paths
+                paths_count[neighbor] += paths_count[vertex]
+
+    return paths_count
+
 # Example usage
 if __name__ == "__main__":
     print("DAG graph")
@@ -201,3 +304,88 @@ if __name__ == "__main__":
         print(f"Distance: {distance}")
     except ValueError as e:
         print(e)
+
+
+#_____________________BONUS 1_____________________
+print("__________Reconstructing tree from lists____________")
+preorder = ['A', 'B', 'C', 'D', 'E']
+postorder = ['B', 'D', 'E', 'C', 'A']
+inorder = ['B', 'A', 'D', 'C', 'E']
+tree = reconstruct_tree(preorder, postorder, inorder)
+print_tree(tree)
+"""
+      A
+     / \
+    B   C
+       / \
+      D   E`
+
+"""
+preorder = [10, 5, 20, 15, 25]
+postorder = [5, 15, 25, 20, 10]
+inorder = [5, 10, 15, 20, 25]
+tree = reconstruct_tree(preorder, postorder, inorder)
+print_tree(tree)
+"""
+      10
+     /  \
+    5    20
+        /  \
+      15    25
+"""
+
+#_________________________BONUS 2_____________________
+print("__________Counting paths in DAG____________")
+graph = Graph("graph.txt")
+number_paths_graph = bonus_2(graph)
+print("Number of paths from start(vertex 0) to each vertex:")
+for vertex, count in number_paths_graph.items():
+    print(f"Vertex {vertex}: {count} paths")
+
+try:
+    number_paths_graph_no_dag = bonus_2(graph_no_DAG)
+    print("Number of paths from start to each vertex:")
+    for vertex, count in number_paths_graph_no_dag.items():
+        print(f"Vertex {vertex}: {count} paths")
+except ValueError as e:
+    print(e)
+
+
+#_________________________BONUS 3_____________________
+print("__________Counting lowest-cost paths in DAG____________")
+graph = Graph("graph_bonus_3.txt")
+
+number_paths_graph = bonus_3(graph)
+print("Number of lowest-cost paths from start(vertex 0) to each vertex:")
+for vertex, count in number_paths_graph.items():
+    print(f"Vertex {vertex}: {count} paths")
+try:
+    number_paths_graph_no_dag = bonus_3(graph_no_DAG)
+    print("Number of lowest-cost paths from start to each vertex:")
+    for vertex, count in number_paths_graph_no_dag.items():
+        print(f"Vertex {vertex}: {count} paths")
+except ValueError as e:
+    print(e)
+
+#Modified graph_bonus_3.txt for testing, path from 2 -> 4 is 5 instead of 3 -> modified output for lowest cost path from 0 -> 4
+"""
+6 8
+0 1 1
+0 2 1
+1 3 2
+2 3 2
+1 4 3
+2 4 3
+3 5 1
+4 5 1"""
+"""
+6 8
+0 1 1
+0 2 1
+1 3 2
+2 3 2
+1 4 3
+2 4 5
+3 5 1
+4 5 1
+"""
