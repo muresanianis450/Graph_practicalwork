@@ -53,8 +53,6 @@ class Graph:
         # Ensure both vertices exist in the graph
         if x not in self.out_neighbours:
             self.add_vertex(x)
-        if y not in self.out_neighbours:
-            self.add_vertex(y)
 
         # Add the edge if it doesn't already exist
         if y not in [neighbor for neighbor, _ in self.out_neighbours[x]]:
@@ -221,33 +219,29 @@ class Graph:
         distances[start_vertex] = 0
         parents = {vertex: None for vertex in self.out_neighbours}
         visited = set()
-        #Priority queue setup
-        # processing the vertices in order of increasing distance, starting with the strat_vertex having distance 0
+
+        # Priority queue setup
         priority_queue = [(0, start_vertex)]  # (distance, vertex)
 
-
-        #Processing the queue
         while priority_queue:
             current_distance, current_vertex = heapq.heappop(priority_queue)
 
-            if current_vertex in visited: # Skip if already visited
+            # Skip if already visited
+            if current_vertex in visited:
                 continue
-            visited.add(current_vertex)  # add current vertex to visited set
-
+            visited.add(current_vertex)
 
             # Update neighboring vertices
             for neighbor, weight in self.out_neighbours[current_vertex]:
                 if neighbor not in visited:
                     new_distance = current_distance + weight
-                    #Relaxation:
-                    # If the new distance is less than the current known distance, update it
+                    # Relaxation: Update distance if a shorter path is found
                     if new_distance < distances[neighbor]:
                         distances[neighbor] = new_distance
                         parents[neighbor] = current_vertex
                         heapq.heappush(priority_queue, (new_distance, neighbor))
 
         return distances, parents
-
     def print_graph(graph):
         """
         Prints all vertices and edges of the graph, including their weights.
@@ -300,7 +294,6 @@ def run_problem_large_graph():
 #_________________BONUS 1____________________
 
 
-#TODO show notion photo with the graph represented
 def run_bonus_1():
     graph = Graph("graph50.txt")
     start_vertex = 0
@@ -309,10 +302,14 @@ def run_bonus_1():
     print(f"Number of distinct walks of minimum cost from {start_vertex} to {end_vertex}: {result}")
 
 
+print("_______________RUNNING PROBLEM_________________")
 
-#run_problem_large_graph()
-#run_problem1_simple_graph()
-#run_bonus_1()
+#run_problem_large_graph()          #!!!!!!!!!!!!!!!!!!!!!!!
+run_problem1_simple_graph()
+
+
+print("_______________RUNNING BONUS 1_________________")
+run_bonus_1()
 
 
 
@@ -369,8 +366,8 @@ def run_bonus_2():
 
     print(f"Number of distinct walks from {start_vertex} to {end_vertex}:",
           dag.count_walks(start_vertex, end_vertex))
-
-#run_bonus_2()
+print("_______________RUNNING BONUS 2_________________")
+run_bonus_2()                    #  !!!!!!!!!!!!!!!!!!!!!!!
 
 
 
@@ -380,64 +377,90 @@ def run_bonus_2():
 import heapq
 
 def bridge_and_torch(times):
-    n = len(times)
-    people = list(range(n))
-    all_people = frozenset(people)
-    start_state = (all_people, 'L')
-    goal_state = (frozenset(), 'R')
+    """
+    Solves the Bridge and Torch problem using the A* search algorithm.
+    :param times: A list of integers where each element represents the time taken by a person to cross the bridge.
+    :return: The minimum total time required for all people to cross the bridge.
+    """
+    n = len(times)  # Number of people
+    people = list(range(n))  # List of people represented by their indices
+    all_people = frozenset(people)  # Set of all people
+    start_state = (all_people, 'L')  # Initial state: all people on the left side
+    goal_state = (frozenset(), 'R')  # Goal state: all people on the right side
 
     def is_goal(state):
+        """
+        Checks if the current state is the goal state.
+        :param state: The current state (set of people on the left, torch side).
+        :return: True if the goal state is reached, False otherwise.
+        """
         return state == goal_state
 
     def heuristic(state):
-        # Estimate: max of remaining on the left
-        if state[1] == 'L':
+        """
+        Heuristic function to estimate the remaining cost to reach the goal.
+        :param state: The current state.
+        :return: The maximum crossing time of people still on the left side if the torch is on the left,
+                 otherwise 0 (no cost if the torch is on the right).
+        """
+        if state[1] == 'L':  # If the torch is on the left side
             return max([times[p] for p in state[0]]) if state[0] else 0
-        else:
-            return 0  # All are on the right side or torch is not useful on the right
+        else:  # If the torch is on the right side
+            return 0
 
     def neighbors(state):
+        """
+        Generates all possible next states from the current state.
+        :param state: The current state.
+        :yield: A tuple containing the next state, the cost of the transition, and the people who moved.
+        """
         left, torch_side = state
-        if torch_side == 'L':
+        if torch_side == 'L':  # Torch is on the left side
             # Move 1 or 2 people from left to right
             for p1 in left:
                 for p2 in left:
-                    if p2 < p1:
-                        continue  # Avoid duplicates
+                    if p2 < p1:  # Avoid duplicate pairs
+                        continue
                     group = frozenset([p1, p2]) if p1 != p2 else frozenset([p1])
-                    new_left = left - group
+                    new_left = left - group  # Update the left side
                     cost = max(times[p1], times[p2]) if p1 != p2 else times[p1]
                     yield ((new_left, 'R'), cost, (p1, p2) if p1 != p2 else (p1,))
-        else:
+        else:  # Torch is on the right side
             # Move 1 person back from right to left
             right = all_people - left
             for p in right:
-                new_left = left | frozenset([p])
+                new_left = left | frozenset([p])  # Update the left side
                 cost = times[p]
                 yield ((new_left, 'L'), cost, (p,))
 
     def a_star(start):
-        queue = [(heuristic(start), 0, start, [])]
-        visited = {}
+        """
+        A* search algorithm to find the optimal solution.
+        :param start: The initial state.
+        :return: A tuple containing the total cost and the solution path, or None if no solution is found.
+        """
+        queue = [(heuristic(start), 0, start, [])]  # Priority queue: (estimated total cost, cost so far, state, path)
+        visited = {}  # Dictionary to track visited states and their costs
 
         while queue:
             est_total_cost, cost_so_far, current_state, path = heapq.heappop(queue)
 
-            if is_goal(current_state):
+            if is_goal(current_state):  # If the goal state is reached
                 return cost_so_far, path
 
             if current_state in visited and visited[current_state] <= cost_so_far:
-                continue
-            visited[current_state] = cost_so_far
+                continue  # Skip if the state has already been visited with a lower cost
+            visited[current_state] = cost_so_far  # Mark the state as visited
 
+            # Explore neighbors
             for next_state, transition_cost, moved_people in neighbors(current_state):
                 new_cost = cost_so_far + transition_cost
                 new_path = path + [(current_state, moved_people, transition_cost)]
-                est = new_cost + heuristic(next_state)
+                est = new_cost + heuristic(next_state)  # Calculate the estimated total cost
                 heapq.heappush(queue, (est, new_cost, next_state, new_path))
-        return None
+        return None  # Return None if no solution is found
 
-    result = a_star(start_state)
+    result = a_star(start_state)  # Run the A* algorithm
     if result is None:
         print("No solution found.")
         return
@@ -454,9 +477,10 @@ def bridge_and_torch(times):
         print(f"Step {idx+1}: {names} {move_direction}  ({cost} min)")
 
     return total_time
+print("_______________RUNNING BONUS 3_________________")
 
-# Example usage:
-times = [1, 2, 5, 10]
+#Example usage:
+times = [1, 2, 5, 10]              #!!!!!!!!!!!!!!!!!!!!!!!
 bridge_and_torch(times)
 
 
