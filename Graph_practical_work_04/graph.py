@@ -167,38 +167,43 @@ def longest_path(graph: Graph, start: int, finish: int):
 
     for vertex in topological_order:
         for neighbor, weight in graph.get_out_neighbours_for_vertex(vertex):
-            if distances[vertex] + weight > distances[neighbor]:
+            if distances[vertex] + weight > distances[neighbor]: # Update the distance if it's longer
                 distances[neighbor] = distances[vertex] + weight
-                predecessors[neighbor] = vertex
+                predecessors[neighbor] = vertex # Update the predecessor
 
-    path = []
-    current = finish
-    while current is not None:
+    path = [] # Reconstruct the path
+    current = finish # Start from the finish vertex
+    while current is not None: # While we have a predecessor
         path.append(current)
-        current = predecessors[current]
+        current = predecessors[current] # Move to the predecessor
 
     path.reverse()
     return path, distances[finish]
 
 
 #_____________________BONUS 1_____________________
-def reconstruct_tree(list1 : list , list2: list, list3: list):
+def reconstruct_tree(pre_order : list , post_order: list, in_order: list):
     """
     Reconstructs a tree from three lists.
-    :param list1: list parced in pre-order
-    :param list2: list parced in post-order
-    :param list3: list parced in in-order
+    :param pre_order: list parced in pre-order
+    :param post_order: list parced in post-order
+    :param in_order: list parced in in-order
     :return: a tree
     """
-    if len(list1) == 0 or len(list2) == 0 or len(list3) == 0:
+    if len(pre_order) == 0 or len(post_order) == 0 or len(in_order) == 0:
         return None
 
-    root = list1[0] # The first element of the pre-order list is the root
-    root_index = list3.index(root) #Find the index of the root in the in-order list
+    root = pre_order[0] # The first element of the pre-order list is the root
+    root_index = in_order.index(root) #Find the index of the root in the in-order list
 
-    left_subtree = reconstruct_tree(list1[1:root_index + 1], list2[:root_index], list3[:root_index]) #Reconstruct the left subtree
-    right_subtree = reconstruct_tree(list1[root_index + 1:], list2[root_index:-1], list3[root_index + 1:]) #Reconstruct the right subtree
+    left_subtree = reconstruct_tree(pre_order[1:root_index + 1], post_order[:root_index], in_order[:root_index]) #Reconstruct the left subtree
+    right_subtree = reconstruct_tree(pre_order[root_index + 1:], post_order[root_index:-1], in_order[root_index + 1:]) #Reconstruct the right subtree
 
+    """
+    preorder = ['A', 'B', 'C', 'D', 'E']
+    postorder = ['B', 'D', 'E', 'C', 'A']
+    inorder = ['B', 'A', 'D', 'C', 'E']
+    """
     return root, left_subtree, right_subtree
 def print_tree(node, level=0, is_left=None):
     """
