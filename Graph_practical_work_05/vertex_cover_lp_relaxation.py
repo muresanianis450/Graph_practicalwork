@@ -1,9 +1,6 @@
 import numpy as np
-#from scipy.optimize import linprog
 from graph import Graph
-from tabulate
-
-
+from scipy.optimize import linprog
 def vertex_cover_lp_relaxation(graph):
     """
     Finds a vertex cover using LP relaxation and rounding.
@@ -32,7 +29,7 @@ def vertex_cover_lp_relaxation(graph):
     bounds = [(0, 1) for _ in range(num_vertices)]
 
     # Solve LP using linprog (minimize c^T x subject to A x <= b)
-    result = 0 #linprog(c, A_ub=A, b_ub=b, bounds=bounds, method='highs')
+    result = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method='highs')
 
     if not result.success:
         raise Exception("LP solver failed: " + result.message)
