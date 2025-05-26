@@ -314,8 +314,8 @@ if __name__ == "__main__":
 #_____________________BONUS 1_____________________
 print("__________Reconstructing tree from lists____________")
 preorder = ['A', 'B', 'C', 'D', 'E']
-postorder = ['B', 'D', 'E', 'C', 'A']
 inorder = ['B', 'A', 'D', 'C', 'E']
+postorder = ['B', 'D', 'E', 'C', 'A']
 tree = reconstruct_tree(preorder, postorder, inorder)
 print_tree(tree)
 """
